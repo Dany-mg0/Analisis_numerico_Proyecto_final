@@ -1,0 +1,378 @@
+---
+title: "Caos en la fijación de precios en duopolios T.PUU (1991)"
+author: "Daniela Paola Méndez García Xochilt Marcelina Duran Calderas"
+lang: es
+format: 
+  html:
+    grid:
+      body-width: 1200px
+---
+
+```{python}
+#| code-fold: true
+
+import numpy as np
+import matplotlib.pyplot as plt  
+from scipy import optimize  
+```
+
+**Resumen**- Se estudia la dinámica de dos empresas competidoras en un mercado en términos de la teoría del duopolio de Cournot. Suponiendo una demanda isoelástica y costos unitarios de producción constantes, el mapeo iterativo.
+
+# Modelo Cournot
+
+Supongamos que la cantidad demandada es inversamente proporcional al precio ρ. Esto representa una función de demanda "isoelástica" que refleja un caso en el que los consumidores gastan siempre una suma constante en el producto, independientemente del precio. Invirtiendo la función de demanda obtenemos: $$ p = \frac{1}{x + y} $$ donde la cantidad total en el denominador es la suma de las ofertas, "x" e "y", de los dos competidores.
+
+Los ingresos de las dos empresas son iguales al precio por la cantidad, es decir, px= x/(x+y) y py=y/(x+y) respectivamente.
+
+ La primera expresión corresponde a la empresa que controla x, tomando  y como dado. Para maximizar los beneficios de la empresa, debemos igualar la derivada parcial de (2) con respecto a x a cero, obteniendo:
+
+
+# Grafica 1. Funciones de reacción y punto de Cournot.
+
+Vemos las funciones de reaccion ilustradas en el espacio x, y junto con su intersección, el equilibrio de Cournot. Caen a 0 en y= 1/a y x=1/b respectivamente, y alcanzan maximos en y=1/(4b)=x , x=1/(4a)=y respectivamente.
+
+El proceso de ajuste explícito es:
+$x_t = √(y_{t-1}/a) − y_{t-1}$
+$y_t = √(x_{t-1}/b) − x_{t-1}$
+
+
+
+```{python}
+#| code-fold: true
+#| fig-align: "center"
+
+# Parámetros: costos unitarios de cada empresa
+a = 0.5
+b = 0.2
+
+# Funciones de reacción de Cournot
+x_reaccion = lambda y: np.sqrt(y/a) - y   # empresa 1
+y_reaccion = lambda x: np.sqrt(x/b) - x   # empresa 2
+
+# Equilibrio de Cournot (fórmula analítica)
+x_eq = b / (a + b)**2
+y_eq = a / (a + b)**2
+
+y_vals = np.linspace(0, 1/a, 500)
+x_vals = np.linspace(0, 1/b, 500)
+
+# Crear gráfica
+plt.figure(figsize=(8,6))
+plt.plot(x_reaccion(y_vals), y_vals, color="blue", label="Reacción empresa 1: x(y)")
+plt.plot(x_vals, y_reaccion(x_vals), color="red", label="Reacción empresa 2: y(x)")
+plt.plot(x_eq, y_eq, marker='o', ms=8, color="purple", label=f"Equilibrio Cournot ({round(x_eq,4)}, {round(y_eq,4)})")
+plt.axhline(0, color="black", linewidth=0.8, linestyle="--")
+plt.axvline(0, color="black", linewidth=0.8, linestyle="--")
+
+# Personalizar gráfica
+plt.title("Funciones de reacción y equilibrio de Cournot", fontsize=14)
+plt.xlabel("x (producción empresa 1)")
+plt.ylabel("y (producción empresa 2)")
+plt.legend(fontsize=12)
+plt.grid()
+plt.show()
+```
+
+
+# Grafica 2. Ajuste por turnos
+
+Se encontrará que la dinámica de este sistema es capaz de producir movimiento persistente, periódico y caótico, junto con equilibrios de Cournot. Anticipamos un poco la discusión produciendo la Fig. 2, que muestra un proceso de ajuste caótico en el mismo escenario que la Fig. 1. El mapa bidimensional no se ha repetido de la manera habitual. Según la tradición en la economía del duopolio, se supone que los dos competidores se turnan cada dos períodos, ajustándose cada uno según. Más adelante veremos qué diferencia supone dejar que las empresas se ajusten simultáneamente.
+
+Según la tradición del duopolio, las empresas se turnan cada periodo para ajustar. La pérdida de estabilidad del punto fijo ocurre cuando el producto de las derivadas de las funciones de reacción en el equilibrio es igual a −1, lo que da la condición:
+$(a−b)² = 4ab$
+
+Aquí se muestra el ajuste caótico por turnos. Las trayectorias forman rectángulos anidados que se expanden desde el equilibrio hacia afuera, cambiando irregularmente entre regiones internas y externas del atractor.
+
+```{python}
+#| code-fold: true
+#| fig-align: "center"
+
+
+a = 0.5
+b = a / 5.9  
+
+
+x_eq = b / (a + b)**2
+y_eq = a / (a + b)**2
+
+
+x_cur = x_eq * 1.001
+y_cur = y_eq * 1.001
+
+
+puntos_x = [x_cur]
+puntos_y = [y_cur]
+
+for t in range(500):
+    # Empresa 1 ajusta (segmento horizontal)
+    x_new = np.sqrt(y_cur/a) - y_cur
+    if x_new < 0 or x_new > 10:
+        break
+    puntos_x.append(x_new)
+    puntos_y.append(y_cur)
+    x_cur = x_new
+    # Empresa 2 ajusta (segmento vertical)
+    y_new = np.sqrt(x_cur/b) - x_cur
+    if y_new < 0 or y_new > 10:
+        break
+    puntos_x.append(x_cur)
+    puntos_y.append(y_new)
+    y_cur = y_new
+
+
+y_vals = np.linspace(0, max(puntos_y)*1.1, 100)
+x_vals = np.linspace(0, max(puntos_x)*1.1, 100)
+x_reac = np.sqrt(y_vals/a) - y_vals
+y_reac = np.sqrt(x_vals/b) - x_vals
+mask_x = x_reac >= 0
+mask_y = y_reac >= 0
+
+# Crear gráfica
+plt.figure(figsize=(8,8))
+plt.plot(x_reac[mask_x], y_vals[mask_x], color="black", linewidth=1.8)
+plt.plot(x_vals[mask_y], y_reac[mask_y], color="black", linewidth=1.8)
+plt.plot(puntos_x, puntos_y, color="black", linewidth=0.7)
+plt.plot(x_eq, y_eq, marker='x', ms=12, color="black", markeredgewidth=2, zorder=5)
+plt.axhline(0, color="black", linewidth=1.2)
+plt.axvline(0, color="black", linewidth=1.2)
+
+# Personalizar gráfica
+plt.title("Chaotic adjustment in the duopoly", fontsize=13)
+plt.xlabel("x (producción empresa 1)")
+plt.ylabel("y (producción empresa 2)")
+plt.xlim(-0.01, max(puntos_x)*1.08)
+plt.ylim(-0.01, max(puntos_y)*1.08)
+plt.grid(False)
+plt.show()
+```
+
+
+# Grafica 3. Ajuste Simultaneo
+
+Ahora, Puu nos menciona un caso especial en el que qué pasaría si ambas empresas ajustan al mismo tiempo usando los valores del periodo anterior del rival. Se usan las mismas funciones de reacción (4)-(5) pero interpretadas de forma simultánea.
+
+Esto se cumple cuando el ratio $a/b$ es igual a $3 ± 2√2$. El punto fijo es estable cuando el ratio está dentro del intervalo $(3−2√2, 3+2√2)$. Pero lo que podemos evitar es que este modelo no explote y para eso, el ratio debe estar dentro de $(4/25, 25/4)$.  
+
+En esta gráfica se muestra la amplitud del precio de mercado $p=1/(x+y)$ para un rango de ratios de costos unitarios. Se puede ver una ruta de doblamiento de periodo hacia el caos. La forma de montaña muestra tres zonas: equilibrio (pico delgado y alto), periodicidad (dos sub-picos) y caos (base ancha y densa). Esta pequeña ventana de caos existe entre los límites de inestabilidad (5.83) y explosión (6.25) del ratio $a/b$.
+
+```{python}
+#| code-fold: true
+#| fig-align: "center"
+
+
+# Parámetros
+a_fijo = 1.0
+n_iter = 3000
+n_trans = 2000
+
+# Barrer ratio a/b en la ventana de caos (5.83 a 6.25)
+ratios_ab = np.linspace(3 + 2*np.sqrt(2), 25/4, 5000)
+
+ratio_bif = []
+precio_bif = []
+
+for r in ratios_ab:
+    b_i = a_fijo / r
+    # Equilibrio de Cournot
+    x_eq = b_i / (a_fijo + b_i)**2
+    y_eq = a_fijo / (a_fijo + b_i)**2
+    x_cur = x_eq + 0.0001
+    y_cur = y_eq + 0.0001
+    
+    # Iteración del mapa
+    for t in range(n_iter):
+        x_new = np.sqrt(y_cur/a_fijo) - y_cur
+        y_new = np.sqrt(x_cur/b_i) - x_cur
+        if x_new <= 0 or y_new <= 0 or x_new > 50 or y_new > 50:
+            break
+        x_cur = x_new
+        y_cur = y_new
+        # Guardar precio después del transitorio
+        if t >= n_trans:
+            p = 1.0 / (x_cur + y_cur)
+            if 0 < p < 500:
+                precio_bif.append(p)
+                ratio_bif.append(r)
+
+# Calcular límite del eje y con percentil para ver el pico
+precio_arr = np.array(precio_bif)
+
+# Crear gráfica
+plt.figure(figsize=(6, 10))
+plt.scatter(ratio_bif, precio_bif, s=0.04, color="black", alpha=0.9)
+
+# Personalizar gráfica
+plt.title("Section of chaotic, periodic, and equilibrium\nresponse to the unit cost ratio", fontsize=12)
+plt.xlabel("Ratio a/b (costos unitarios)")
+plt.ylabel("Precio p = 1/(x+y)")
+plt.xlim(5.82, 6.26)
+plt.ylim(0, np.percentile(precio_arr, 99.5))
+plt.grid(False)
+plt.show()
+```
+
+# Grafica 4.
+
+Como se puede ver, usa el mismo parámetro que la Fig. 2 pero con ajuste simultáneo. El atractor consiste en conjuntos de líneas verticales y horizontales espaciadas de forma que se intersecan sobre las curvas de ajuste. Todo el conjunto puede trazarse siguiendo una espiral hacia afuera a través de los rectángulos anidados. Se nota que hay una cruz en blanco nunca visitada a través del equilibrio de Cournot.
+
+
+```{python}
+#| code-fold: true
+#| fig-align: "center"
+
+# Mismos parámetros que Fig 2
+a = 0.5
+b = 0.0833
+
+x_eq = b / (a + b)**2
+y_eq = a / (a + b)**2
+
+# Misma condición inicial que Fig 2
+x_cur = x_eq * 1.001
+y_cur = y_eq * 1.001
+
+puntos_x = [x_cur]
+puntos_y = [y_cur]
+
+for t in range(10000):
+    x_new = np.sqrt(y_cur/a) - y_cur
+    if x_new < 0 or x_new > 10:
+        break
+    y_new = np.sqrt(x_cur/b) - x_cur  # ← usa x_cur (simultáneo)
+    if y_new < 0 or y_new > 10:
+        break
+    # Ambos segmentos desde posición anterior
+    puntos_x.append(x_new)
+    puntos_y.append(y_cur)
+    puntos_x.append(x_new)      # ← x_new en ambos (simultáneo)
+    puntos_y.append(y_new)
+    x_cur = x_new
+    y_cur = y_new
+
+# Todo lo demás igual que Fig 2
+y_vals = np.linspace(0, max(puntos_y)*1.1, 1000)
+x_vals = np.linspace(0, max(puntos_x)*1.1, 1000)
+x_reac = np.sqrt(y_vals/a) - y_vals
+y_reac = np.sqrt(x_vals/b) - x_vals
+mask_x = x_reac >= 0
+mask_y = y_reac >= 0
+
+plt.figure(figsize=(8,8))
+plt.plot(x_reac[mask_x], y_vals[mask_x], color="black", linewidth=1.8)
+plt.plot(x_vals[mask_y], y_reac[mask_y], color="black", linewidth=1.8)
+plt.plot(puntos_x, puntos_y, color="black", linewidth=0.7)
+plt.plot(x_eq, y_eq, marker='x', ms=12, color="black", markeredgewidth=2, zorder=5)
+plt.axhline(0, color="black", linewidth=1.2)
+plt.axvline(0, color="black", linewidth=1.2)
+plt.title("Chaos in simultaneous adjustment", fontsize=13)
+plt.xlabel("x (producción empresa 1)")
+plt.ylabel("y (producción empresa 2)")
+plt.xlim(-0.01, max(puntos_x)*1.08)
+plt.ylim(-0.01, max(puntos_y)*1.08)
+plt.grid(False)
+plt.show()
+
+```
+
+# Grafica 5.
+
+Pero la situación cambia cuando se introducen ambas variables en los lados derechos de las funciones de reacción mediante un proceso adaptivo: las empresas no saltan directamente a su nuevo óptimo, sino se ajustan gradualmente en esa dirección:
+$x_t = x_{t-1} + θ(√(y_{t-1}/a) − y_{t-1} − x_{t-1})$
+$y_t = y_{t-1} + θ(√(x_{t-1}/b) − x_{t-1} − y_{t-1})$
+Donde $0 ≤ θ ≤ 1$. Si $θ=1$ se recupera el caso anterior.
+
+Aquí se puede ver el atractor caótico del sistema adaptivo con $θ=0.9$. El proceso transitorio diverge del vecindario del equilibrio inestable y es atraído hacia la "hoja" caótica. Para otros valores de parámetros el atractor se convierte en una curva cerrada. En general la adaptabilidad tiende a estabilizar el modelo.
+
+
+```{python}
+#| code-fold: true
+#| fig-align: "center"
+
+# Parámetros — theta=0.9 como indica el paper
+theta = 0.9
+a = 0.5
+b = a / 5.9
+
+# Equilibrio de Cournot
+x_eq = b / (a + b)**2
+y_eq = a / (a + b)**2
+
+# Condición inicial alejada del equilibrio
+x_cur = 0.01
+y_cur = 1.9
+
+puntos_x = []
+puntos_y = []
+
+# Iteración sistema adaptivo (ecs. 23-24 de Puu)
+for t in range(50000):
+    x_opt = np.sqrt(max(y_cur/a, 0)) - y_cur
+    y_opt = np.sqrt(max(x_cur/b, 0)) - x_cur
+    if x_opt < 0 or y_opt < 0:
+        break
+    x_new = x_cur + theta * (x_opt - x_cur)
+    y_new = y_cur + theta * (y_opt - y_cur)
+    if x_new < 0 or y_new < 0 or x_new > 10:
+        break
+    x_cur = x_new
+    y_cur = y_new
+    puntos_x.append(x_cur)
+    puntos_y.append(y_cur)
+
+# Curvas de reacción
+y_vals = np.linspace(0.001, 2.5, 1000)
+x_vals = np.linspace(0.001, 0.6, 1000)
+x_reac = np.sqrt(y_vals/a) - y_vals
+y_reac = np.sqrt(x_vals/b) - x_vals
+mask_x = x_reac >= 0
+mask_y = y_reac >= 0
+
+# Crear gráfica
+plt.figure(figsize=(8,8))
+plt.plot(x_reac[mask_x], y_vals[mask_x], color="black", linewidth=1.8)
+plt.plot(x_vals[mask_y], y_reac[mask_y], color="black", linewidth=1.8)
+plt.scatter(puntos_x, puntos_y, s=0.05, color="black", alpha=0.4)
+plt.plot(x_eq, y_eq, marker='x', ms=12, color="black", markeredgewidth=2, zorder=5)
+plt.axhline(0, color="black", linewidth=1.0)
+plt.axvline(0, color="black", linewidth=1.0)
+
+# Personalizar gráfica
+plt.title("Chaotic attractor of the adaptive system", fontsize=13)
+plt.xlabel("x (producción empresa 1)")
+plt.ylabel("y (producción empresa 2)")
+plt.xlim(-0.01, 0.6)
+plt.ylim(-0.01, 2.5)
+plt.grid(False)
+plt.show()
+```
+
+
+# Conclusiones
+
+
+No sorprende que la teoría del duopolio de Cournot sea capaz de producir dinámica caótica dado que incorpora no linealidades. La ventaja del modelo presentado es que parte de supuestos tan simples que las funciones de reacción pueden derivarse explícitamente, y aun así es capaz de producir dinámica compleja.
+
+Todo esto se puede ver reflejado en las gráficas, se puede ver la dinámica caótica cuando está esa dinámica entre dos empresas competidoras en un mercado een térmminos de la teoría del duopolio de Cournot.
+
+De hecho, el autor quería expresas gráficamente como es que estas gráficamente hay un proceso de ajustoe caótico cuando hay ajuste de precios unitarios, y también que es lo que pasa cuando hay un ajuste simultaneo en ambas empresas, esto se puede ver gráficamente.
+
+
+# Referencias
+
+A. Cournot, Rdcherces sur les principes math~matiques de la th~orie des richesses. Paris (1838)
+
+H. von Stackelberg, Probleme der unvollkommenen Konkurrenz, Weltwirtschaftliches Archiv 48:95 (1938)
+
+D. Rand, Exotic phenomena in games and duopoly models, Journal of Mathematical Economics 5:173 (1978) 
+
+J.H. Henderson and R.E. Quandt, Microeconomic Theory - A Mathematical Approach. McGraw-Hill, New 
+York (1958)
+
+Puu, T. (1991). Chaos in duopoly pricing. Chaos, Solitons & Fractals, 1(6), 573–581.
+
+
+
+
+
+
+

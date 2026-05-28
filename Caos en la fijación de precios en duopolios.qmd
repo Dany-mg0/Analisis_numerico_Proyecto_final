@@ -31,9 +31,23 @@ Los ingresos de las dos empresas son iguales al precio por la cantidad, es decir
 
 Vemos las funciones de reaccion ilustradas en el espacio x, y junto con su intersección, el equilibrio de Cournot. Caen a 0 en y= 1/a y x=1/b respectivamente, y alcanzan maximos en y=1/(4b)=x , x=1/(4a)=y respectivamente.
 
-El proceso de ajuste explícito es:
-$x_t = √(y_{t-1}/a) − y_{t-1}$
-$y_t = √(x_{t-1}/b) − x_{t-1}$
+
+
+
+donde x e y son las producciones de las dos empresas. Los beneficios de cada empresa son:
+$Π₁(x,y) = x/(x+y) − ax$
+
+$Π₂(x,y) = y/(x+y) − by$
+
+Maximizando cada beneficio respecto a la propia producción se obtienen las funciones de reacción de Cournot:
+$x(y) = √(y/a) − y$
+$y(x) = √(x/b) − x$
+
+
+El equilibrio de Cournot se obtiene resolviendo ambas funciones simultáneamente:
+$x = b/(a+b)²*$
+$y = a/(a+b)²*$
+
 
 
 
@@ -74,7 +88,15 @@ plt.show()
 ```
 
 
+
 # Grafica 2. Ajuste por turnos
+
+
+El proceso de ajuste explícito es:
+$x_t = √(y_{t-1}/a) − y_{t-1}$
+$y_t = √(x_{t-1}/b) − x_{t-1}$
+
+
 
 Se encontrará que la dinámica de este sistema es capaz de producir movimiento persistente, periódico y caótico, junto con equilibrios de Cournot. Anticipamos un poco la discusión produciendo la Fig. 2, que muestra un proceso de ajuste caótico en el mismo escenario que la Fig. 1. El mapa bidimensional no se ha repetido de la manera habitual. Según la tradición en la economía del duopolio, se supone que los dos competidores se turnan cada dos períodos, ajustándose cada uno según. Más adelante veremos qué diferencia supone dejar que las empresas se ajusten simultáneamente.
 
@@ -213,6 +235,8 @@ plt.show()
 
 # Grafica 4.
 
+Ahora se asume que ambas empresas ajustan al mismo tiempo usando los valores del periodo anterior del rival. Se usan las mismas funciones de reacción (4)-(5) pero interpretadas de forma simultánea.
+
 Como se puede ver, usa el mismo parámetro que la Fig. 2 pero con ajuste simultáneo. El atractor consiste en conjuntos de líneas verticales y horizontales espaciadas de forma que se intersecan sobre las curvas de ajuste. Todo el conjunto puede trazarse siguiendo una espiral hacia afuera a través de los rectángulos anidados. Se nota que hay una cruz en blanco nunca visitada a través del equilibrio de Cournot.
 
 
@@ -274,15 +298,17 @@ plt.show()
 
 ```
 
-# Grafica 5.
 
 Pero la situación cambia cuando se introducen ambas variables en los lados derechos de las funciones de reacción mediante un proceso adaptivo: las empresas no saltan directamente a su nuevo óptimo, sino se ajustan gradualmente en esa dirección:
 $x_t = x_{t-1} + θ(√(y_{t-1}/a) − y_{t-1} − x_{t-1})$
 $y_t = y_{t-1} + θ(√(x_{t-1}/b) − x_{t-1} − y_{t-1})$
 Donde $0 ≤ θ ≤ 1$. Si $θ=1$ se recupera el caso anterior.
 
-Aquí se puede ver el atractor caótico del sistema adaptivo con $θ=0.9$. El proceso transitorio diverge del vecindario del equilibrio inestable y es atraído hacia la "hoja" caótica. Para otros valores de parámetros el atractor se convierte en una curva cerrada. En general la adaptabilidad tiende a estabilizar el modelo.
 
+
+# Gráfica 5
+
+Aquí se puede ver el atractor caótico del sistema adaptivo con $θ=0.9$. El proceso transitorio diverge del vecindario del equilibrio inestable y es atraído hacia la "hoja" caótica. Para otros valores de parámetros el atractor se convierte en una curva cerrada. En general la adaptabilidad tiende a estabilizar el modelo.
 
 ```{python}
 #| code-fold: true
